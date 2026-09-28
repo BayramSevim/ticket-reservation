@@ -40,6 +40,9 @@ public class Show {
 
         if(!saleEndsAt.isAfter(saleStartsAt))
             throw new IllegalArgumentException("Satış bitişi, satış başlangıcından sonra olmalı");
+        if(saleEndsAt.isAfter(startsAt))
+            throw new IllegalArgumentException("Satış, en geç konser başladığında bitmeli");
+
 
         this.title = title;
         this.location = location;

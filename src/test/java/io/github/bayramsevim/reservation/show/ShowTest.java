@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ShowTest {
@@ -40,5 +41,16 @@ public class ShowTest {
         assertThrows(IllegalArgumentException.class, () -> {
             new Show("Tarkan Konseri","Harbiye",startsAt,saleStartsAt,saleEndsAt);
         });
+    }
+
+    @Test
+    void validShowIsCreatedEvenWhenSaleEndsExactlyAtShowStart(){
+        Instant startsAt = Instant.parse("2026-11-15T18:00:00Z");
+        Instant saleStartsAt = Instant.parse("2026-10-09T08:00:00Z");
+        Instant saleEndsAt   = Instant.parse("2026-11-15T18:00:00Z");
+
+        Show show = new Show("Tarkan Konseri","Harbiye",startsAt,saleStartsAt,saleEndsAt);
+        assertEquals("Tarkan Konseri", show.getTitle());
+        assertEquals(saleEndsAt, show.getSaleEndsAt());
     }
 }

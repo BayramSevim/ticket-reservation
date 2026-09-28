@@ -1,4 +1,4 @@
-package com.github.reservation;
+package io.github.bayramsevim.reservation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

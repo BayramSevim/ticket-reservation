@@ -1,3 +1,10 @@
 spring:
   application:
     name: reservation
+  datasource:
+    url: jdbc:postgresql://localhost:5433/reservation
+    username: postgres
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: validate

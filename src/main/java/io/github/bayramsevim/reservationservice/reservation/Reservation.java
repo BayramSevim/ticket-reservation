@@ -71,6 +71,9 @@ public class Reservation {
     }
 
     public void expire(Instant now){
+        if (now.isBefore(expiresAt))
+            throw new IllegalStateException(
+                    "Rezervasyonun süresi henüz dolmadı. Son geçerlilik: " + expiresAt + ", expire denemesi: " + now);
         this.status = ReservationStatus.EXPIRED;
     }
 }

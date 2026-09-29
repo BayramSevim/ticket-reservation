@@ -86,4 +86,15 @@ class ReservationTest {
         assertEquals(ReservationStatus.CANCELLED,reservation.getStatus());
         assertEquals(reservation.getCancelledAt(),now);
     }
+
+    @Test
+    void cancelledReservationCannotBeCancelledAgain() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:05:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+
+        reservation.cancel(now);
+
+        assertThrows(IllegalStateException.class, () -> reservation.cancel(now));
+    }
 }

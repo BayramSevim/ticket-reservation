@@ -64,6 +64,8 @@ public class Reservation {
     }
 
     public void cancel(Instant cancelledAt){
+        if (this.status != ReservationStatus.HELD && this.status != ReservationStatus.CONFIRMED)
+            throw new IllegalStateException("Rezervasyon durumu bu durum için cancel olamaz : " + this.status);
         this.status = ReservationStatus.CANCELLED;
         this.cancelledAt = cancelledAt;
     }

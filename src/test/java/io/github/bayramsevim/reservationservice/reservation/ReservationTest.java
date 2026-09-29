@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ReservationTest {
 
@@ -42,5 +43,13 @@ class ReservationTest {
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
         reservation.confirm();
         assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
+    }
+
+    @Test
+    void confirmedReservationCannotBeConfirmedAgain(){
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+        reservation.confirm();
+        assertThrows(IllegalStateException.class, reservation::confirm);
     }
 }

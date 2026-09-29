@@ -54,6 +54,8 @@ public class Reservation {
     }
 
     public void confirm() {
+        if(!(this.status == ReservationStatus.HELD))
+            throw new IllegalStateException("Rezervasyon durumu bu durum için confirm olamaz : " + this.status);
         this.status = ReservationStatus.CONFIRMED;
     }
 }

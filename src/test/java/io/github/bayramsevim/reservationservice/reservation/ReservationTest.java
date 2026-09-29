@@ -31,7 +31,6 @@ class ReservationTest {
     @Test
     void newReservationIsHeld() {
         Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
-
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
 
         assertEquals(ReservationStatus.HELD, reservation.getStatus());
@@ -40,16 +39,31 @@ class ReservationTest {
     @Test
     void heldReservationCanBeConfirmed() {
         Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:05:00Z");
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
-        reservation.confirm();
+
+        reservation.confirm(now);
+
         assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
     }
 
     @Test
     void confirmedReservationCannotBeConfirmedAgain(){
         Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:05:00Z");
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
-        reservation.confirm();
-        assertThrows(IllegalStateException.class, reservation::confirm);
+        reservation.confirm(now);
+        assertThrows(IllegalStateException.class, ()-> reservation.confirm(now));
+    }
+
+    @Test
+    void confirmingSetsConfirmedAt() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:05:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+
+        reservation.confirm(now);
+
+        assertEquals(now, reservation.getConfirmedAt());
     }
 }

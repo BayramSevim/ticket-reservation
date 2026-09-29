@@ -62,4 +62,9 @@ public class Reservation {
         this.status = ReservationStatus.CONFIRMED;
         this.confirmedAt = confirmedAt;
     }
+
+    public void cancel(Instant cancelledAt){
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = cancelledAt;
+    }
 }

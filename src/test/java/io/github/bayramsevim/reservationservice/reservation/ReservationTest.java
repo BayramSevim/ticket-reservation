@@ -74,6 +74,16 @@ class ReservationTest {
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
 
         assertThrows(IllegalStateException.class,()-> reservation.confirm(now));
-        // buraya: confirm(now) çağrısının IllegalStateException fırlattığını kontrol et
+    }
+
+    @Test
+    void heldReservationCanBeCancelled() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:05:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+
+        reservation.cancel(now);
+        assertEquals(ReservationStatus.CANCELLED,reservation.getStatus());
+        assertEquals(reservation.getCancelledAt(),now);
     }
 }

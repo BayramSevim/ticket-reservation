@@ -107,4 +107,13 @@ class ReservationTest {
         reservation.cancel(now);
         assertEquals(ReservationStatus.CANCELLED,reservation.getStatus());
     }
+
+    @Test
+    void heldReservationExpiresAfterDeadline() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant now       = Instant.parse("2026-10-15T18:15:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+        reservation.expire(now);
+        assertEquals(ReservationStatus.EXPIRED,reservation.getStatus());
+    }
 }

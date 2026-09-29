@@ -124,4 +124,15 @@ class ReservationTest {
         Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
         assertThrows(IllegalStateException.class, () -> reservation.expire(now));
     }
+
+    @Test
+    void confirmedReservationCannotExpire() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Instant paidAt    = Instant.parse("2026-10-15T18:05:00Z");
+        Instant later     = Instant.parse("2026-10-15T18:15:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+        reservation.confirm(paidAt);
+
+        assertThrows(IllegalStateException.class, () -> reservation.expire(later));
+    }
 }

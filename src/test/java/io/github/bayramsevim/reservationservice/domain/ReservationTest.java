@@ -1,6 +1,4 @@
-package io.github.bayramsevim.reservation.domain;
-
-import org.junit.jupiter.api.Test;
+package io.github.bayramsevim.reservationservice.domain;
 
 public class ReservationTest {
 

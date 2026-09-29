@@ -1,4 +1,4 @@
-package io.github.bayramsevim.reservation.user;
+package io.github.bayramsevim.reservationservice.user;
 
 public enum Role {
     USER,

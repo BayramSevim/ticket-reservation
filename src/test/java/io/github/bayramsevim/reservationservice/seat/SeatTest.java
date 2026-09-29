@@ -1,6 +1,6 @@
-package io.github.bayramsevim.reservation.seat;
+package io.github.bayramsevim.reservationservice.seat;
 
-import io.github.bayramsevim.reservation.show.Show;
+import io.github.bayramsevim.reservationservice.show.Show;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

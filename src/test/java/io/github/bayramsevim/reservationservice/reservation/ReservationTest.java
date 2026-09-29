@@ -35,4 +35,12 @@ class ReservationTest {
 
         assertEquals(ReservationStatus.HELD, reservation.getStatus());
     }
+
+    @Test
+    void heldReservationCanBeConfirmed() {
+        Instant expiresAt = Instant.parse("2026-10-15T18:10:00Z");
+        Reservation reservation = new Reservation(aSeat(), aUser(), expiresAt);
+        reservation.confirm();
+        assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
+    }
 }

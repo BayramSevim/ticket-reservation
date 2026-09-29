@@ -1,4 +1,4 @@
-package io.github.bayramsevim.reservation.show;
+package io.github.bayramsevim.reservationservice.show;
 
 import org.junit.jupiter.api.Test;
 

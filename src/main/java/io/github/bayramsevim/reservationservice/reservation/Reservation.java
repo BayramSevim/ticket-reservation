@@ -52,4 +52,8 @@ public class Reservation {
         this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt boş olamaz");
         this.status = ReservationStatus.HELD;
     }
+
+    public void confirm() {
+        this.status = ReservationStatus.CONFIRMED;
+    }
 }

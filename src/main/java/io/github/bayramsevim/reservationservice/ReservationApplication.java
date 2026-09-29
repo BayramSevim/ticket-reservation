@@ -1,4 +1,4 @@
-package io.github.bayramsevim.reservation;
+package io.github.bayramsevim.reservationservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

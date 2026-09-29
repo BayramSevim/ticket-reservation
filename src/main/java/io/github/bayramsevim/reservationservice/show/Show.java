@@ -1,4 +1,4 @@
-package io.github.bayramsevim.reservation.show;
+package io.github.bayramsevim.reservationservice.show;
 
 import jakarta.persistence.*;
 import lombok.Getter;

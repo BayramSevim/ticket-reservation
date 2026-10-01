@@ -28,4 +28,20 @@ public class ReservationController {
                 .created(URI.create("/reservations/" + response.id()))
                 .body(response);
     }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<ReservationResponse> confirm(@PathVariable Long id) {
+        ReservationResponse response = reservationService.confirm(id);
+        return ResponseEntity
+                .ok()
+                .body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ReservationResponse> cancel(@PathVariable Long id) {
+        ReservationResponse response = reservationService.cancel(id);
+        return ResponseEntity
+                .ok()
+                .body(response);
+    }
 }

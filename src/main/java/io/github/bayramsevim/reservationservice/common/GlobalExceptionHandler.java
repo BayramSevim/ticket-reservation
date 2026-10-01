@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,5 +24,17 @@ public class GlobalExceptionHandler {
         problem.setProperty("errors", errors);
 
         return problem;
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleValidation(IllegalStateException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ProblemDetail handleValidation(NoSuchElementException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, ex.getMessage());
     }
 }

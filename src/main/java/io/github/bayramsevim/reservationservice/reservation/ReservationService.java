@@ -41,17 +41,17 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation confirm(Long reservationId){
+    public ReservationResponse confirm(Long reservationId){
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
         reservation.confirm(Instant.now(clock));
-        return reservation;
+        return ReservationResponse.from(reservation);
     }
 
     @Transactional
-    public Reservation cancel(Long reservationId){
+    public ReservationResponse cancel(Long reservationId){
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
         reservation.cancel(Instant.now(clock));
-        return reservation;
+        return ReservationResponse.from(reservation);
     }
 
     @Transactional(readOnly = true)

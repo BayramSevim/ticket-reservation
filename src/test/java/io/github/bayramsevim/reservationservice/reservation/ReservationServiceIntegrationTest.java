@@ -40,4 +40,5 @@ public class ReservationServiceIntegrationTest {
         Reservation fromDb = reservationRepository.findById(held.getId()).orElseThrow();
         assertEquals(ReservationStatus.CONFIRMED, fromDb.getStatus());
     }
+
 }

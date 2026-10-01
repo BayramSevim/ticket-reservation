@@ -28,6 +28,7 @@ public class ReservationService {
         this.clock = clock;
     }
 
+    @Transactional
     public Reservation hold(Long userId, Long seatId){
         User user = userRepository.findById(userId).orElseThrow();
         Seat seat = seatRepository.findById(seatId).orElseThrow();
@@ -45,4 +46,5 @@ public class ReservationService {
         reservation.confirm(Instant.now(clock));
         return reservation;
     }
+
 }

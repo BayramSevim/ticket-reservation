@@ -27,4 +27,11 @@ public class AuthController {
                 .body(authService.register(request));
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        return ResponseEntity
+                .created(URI.create("/auth/login"))
+                .body(authService.login(request));
+    }
+
 }

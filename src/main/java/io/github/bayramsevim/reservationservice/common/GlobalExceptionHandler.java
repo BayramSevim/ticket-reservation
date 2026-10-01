@@ -1,5 +1,6 @@
 package io.github.bayramsevim.reservationservice.common;
 
+import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,14 +28,20 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ProblemDetail handleValidation(IllegalStateException ex) {
+    public ProblemDetail illegalStateException(IllegalStateException ex) {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ProblemDetail handleValidation(NoSuchElementException ex) {
+    public ProblemDetail noSuchElementException(NoSuchElementException ex) {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail invalidCredentialsException(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 }

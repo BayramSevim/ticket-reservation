@@ -5,6 +5,7 @@ import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.user.User;
 import io.github.bayramsevim.reservationservice.user.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -36,5 +37,12 @@ public class ReservationService {
 
         Reservation reservation = new Reservation(seat,user,expiresAt);
         return reservationRepository.save(reservation);
+    }
+
+    @Transactional
+    public Reservation confirm(Long reservationId){
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        reservation.confirm(Instant.now(clock));
+        return reservation;
     }
 }

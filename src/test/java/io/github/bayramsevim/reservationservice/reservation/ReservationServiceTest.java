@@ -41,13 +41,12 @@ public class ReservationServiceTest {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(call -> call.getArgument(0));
 
-        Reservation reservation = service.hold(2L, 1L);
+        ReservationResponse response = service.hold(2L, 1L);
 
-        assertEquals(ReservationStatus.HELD, reservation.getStatus());
-        assertEquals(Instant.parse("2026-10-15T18:10:00Z"), reservation.getExpiresAt());
-        assertSame(seat, reservation.getSeat());
-        assertSame(user, reservation.getUser());
-
-        verify(reservationRepository).save(reservation);
+        assertEquals(ReservationStatus.HELD, response.status());
+        assertEquals(Instant.parse("2026-10-15T18:10:00Z"), response.expiresAt());
+        assertEquals("11-A", response.seatLabel());
+        assertEquals("Tarkan Konseri", response.showTitle());
+        verify(reservationRepository).save(any(Reservation.class));
     }
 }

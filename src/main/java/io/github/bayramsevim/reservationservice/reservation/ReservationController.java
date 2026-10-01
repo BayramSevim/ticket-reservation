@@ -1,9 +1,9 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/reservations")
@@ -18,5 +18,13 @@ public class ReservationController {
     @GetMapping("/{id}")
     public ReservationResponse get(@PathVariable Long id) {
         return reservationService.getReservation(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<ReservationResponse> hold(@RequestBody HoldReservationRequest request) {
+        ReservationResponse response = reservationService.hold(request.userId(), request.seatId());
+        return ResponseEntity
+                .created(URI.create("/reservations/" + response.id()))
+                .body(response);
     }
 }

@@ -29,7 +29,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation hold(Long userId, Long seatId){
+    public ReservationResponse hold(Long userId, Long seatId){
         User user = userRepository.findById(userId).orElseThrow();
         Seat seat = seatRepository.findById(seatId).orElseThrow();
 
@@ -37,7 +37,7 @@ public class ReservationService {
         Instant expiresAt = now.plus(Duration.ofMinutes(10));
 
         Reservation reservation = new Reservation(seat,user,expiresAt);
-        return reservationRepository.save(reservation);
+        return ReservationResponse.from(reservationRepository.save(reservation));
     }
 
     @Transactional

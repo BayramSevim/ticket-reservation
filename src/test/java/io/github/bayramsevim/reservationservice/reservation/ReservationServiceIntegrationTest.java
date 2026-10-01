@@ -14,8 +14,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 public class ReservationServiceIntegrationTest {
@@ -50,5 +49,18 @@ public class ReservationServiceIntegrationTest {
         assertEquals(ReservationStatus.CONFIRMED, fromDb.getStatus());
     }
 
+    @Test
+    void cancelIsPersisted() {
+        Seat seat = aSavedSeat();
+        User user = aSavedUser();
+
+        Reservation held = reservationService.hold(user.getId(), seat.getId());
+        reservationService.cancel(held.getId());
+
+
+        Reservation fromDb = reservationRepository.findById(held.getId()).orElseThrow();
+        assertEquals(ReservationStatus.CANCELLED, fromDb.getStatus());
+        assertNotNull(fromDb.getCancelledAt());
+    }
 
 }

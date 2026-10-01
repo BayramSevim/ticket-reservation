@@ -47,6 +47,13 @@ public class ReservationService {
         return reservation;
     }
 
+    @Transactional
+    public Reservation cancel(Long reservationId){
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        reservation.cancel(Instant.now(clock));
+        return reservation;
+    }
+
     @Transactional(readOnly = true)
     public Reservation getReservation(Long reservationId) {
         return reservationRepository.findById(reservationId).orElseThrow();

@@ -1,5 +1,6 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> hold(@RequestBody HoldReservationRequest request) {
+    public ResponseEntity<ReservationResponse> hold(@Valid @RequestBody HoldReservationRequest request) {
         ReservationResponse response = reservationService.hold(request.userId(), request.seatId());
         return ResponseEntity
                 .created(URI.create("/reservations/" + response.id()))

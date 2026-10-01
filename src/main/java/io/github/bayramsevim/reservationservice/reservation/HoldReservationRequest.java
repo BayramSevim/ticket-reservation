@@ -1,7 +1,8 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import jakarta.validation.constraints.NotNull;
+
 public record HoldReservationRequest(
-        Long userId,
-        Long seatId
-) {
-}
+        @NotNull Long userId,
+        @NotNull Long seatId
+) {}

@@ -55,7 +55,8 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public Reservation getReservation(Long reservationId) {
-        return reservationRepository.findById(reservationId).orElseThrow();
+    public ReservationResponse getReservation(Long reservationId) {
+        Reservation reservation =  reservationRepository.findById(reservationId).orElseThrow();
+        return ReservationResponse.from(reservation);
     }
 }

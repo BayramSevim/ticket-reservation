@@ -55,7 +55,7 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public ReservationResponse getReservation(Long reservationId) {
+    public ReservationResponse getReservation(Long reservationId,Long userId) {
         Reservation reservation =  reservationRepository.findById(reservationId).orElseThrow();
         return ReservationResponse.from(reservation);
     }

@@ -47,4 +47,8 @@ public class ReservationService {
         return reservation;
     }
 
+    @Transactional(readOnly = true)
+    public Reservation getReservation(Long reservationId) {
+        return reservationRepository.findById(reservationId).orElseThrow();
+    }
 }

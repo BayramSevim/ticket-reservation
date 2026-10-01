@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 public class ReservationServiceIntegrationTest {
@@ -25,14 +26,22 @@ public class ReservationServiceIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private ReservationRepository reservationRepository;
 
-    @Test
-    void confirmIsPersisted() {
+    private Seat aSavedSeat() {
         Show show = showRepository.save(new Show("Tarkan Konseri", "Harbiye",
                 Instant.parse("2027-11-15T18:00:00Z"),
                 Instant.parse("2027-10-09T08:00:00Z"),
                 Instant.parse("2027-11-15T18:00:00Z")));
-        Seat seat = seatRepository.save(new Seat(show, "11-A", new BigDecimal("23.40")));
-        User user = userRepository.save(new User(UUID.randomUUID() + "@example.com", "hash"));
+        return seatRepository.save(new Seat(show, "11-A", new BigDecimal("23.40")));
+    }
+
+    private User aSavedUser() {
+        return userRepository.save(new User(UUID.randomUUID() + "@example.com", "hash"));
+    }
+
+    @Test
+    void confirmIsPersisted() {
+        Seat seat = aSavedSeat();
+        User user = aSavedUser();
 
         Reservation held = reservationService.hold(user.getId(), seat.getId());
         reservationService.confirm(held.getId());
@@ -40,5 +49,6 @@ public class ReservationServiceIntegrationTest {
         Reservation fromDb = reservationRepository.findById(held.getId()).orElseThrow();
         assertEquals(ReservationStatus.CONFIRMED, fromDb.getStatus());
     }
+
 
 }

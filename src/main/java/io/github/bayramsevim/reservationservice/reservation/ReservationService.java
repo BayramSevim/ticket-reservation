@@ -1,10 +1,14 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
+import io.github.bayramsevim.reservationservice.user.User;
 import io.github.bayramsevim.reservationservice.user.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 
 @Service
 public class ReservationService {
@@ -21,5 +25,16 @@ public class ReservationService {
         this.seatRepository = seatRepository;
         this.userRepository = userRepository;
         this.clock = clock;
+    }
+
+    public Reservation hold(Long userId, Long seatId){
+        User user = userRepository.findById(userId).orElseThrow();
+        Seat seat = seatRepository.findById(seatId).orElseThrow();
+
+        Instant now = Instant.now(clock);
+        Instant expiresAt = now.plus(Duration.ofMinutes(10));
+
+        Reservation reservation = new Reservation(seat,user,expiresAt);
+        return reservationRepository.save(reservation);
     }
 }

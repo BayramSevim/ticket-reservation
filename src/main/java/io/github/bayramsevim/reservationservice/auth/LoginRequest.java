@@ -3,9 +3,9 @@ package io.github.bayramsevim.reservationservice.auth;
 import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-        @NotBlank
+        @NotBlank(message = "Email boş olamaz")
         String email,
-        @NotBlank
+        @NotBlank(message = "Şifre boş olamaz")
         String password
 ) {
 }

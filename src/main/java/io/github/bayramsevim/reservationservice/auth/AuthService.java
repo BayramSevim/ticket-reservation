@@ -13,11 +13,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenService tokenService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenService tokenService, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.refreshTokenService = refreshTokenService;
     }
 
 
@@ -33,13 +35,30 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalStateException("Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new InvalidCredentialsException("E-posta veya şifre hatalı"));
 
         if(!passwordEncoder.matches(request.password(), user.getPasswordHash()))
-            throw new InvalidCredentialsException("Şifre hatalı");
+            throw new InvalidCredentialsException("E-posta veya şifre hatalı");
 
         String token =  tokenService.generateToken(user);
+        String refreshToken = refreshTokenService.create(user.getId());
 
-        return new LoginResponse(token, tokenService.expiresInSeconds());
+        return new LoginResponse(token, tokenService.expiresInSeconds(), refreshToken);
+    }
+
+    @Transactional
+    public LoginResponse refresh(RefreshRequest request) {
+        Long userId = refreshTokenService.consume(request.refreshToken());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
+
+        String token = tokenService.generateToken(user);
+        String refreshToken = refreshTokenService.create(user.getId());
+
+        return new LoginResponse(token, tokenService.expiresInSeconds(), refreshToken);
+    }
+
+    public void logout(RefreshRequest request) {
+        refreshTokenService.revoke(request.refreshToken());
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservations")
@@ -23,6 +24,12 @@ public class ReservationController {
     public ReservationResponse getReservation(@PathVariable Long id ,@AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());
         return reservationService.getReservation(id, userId);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+        return ResponseEntity.ok(reservationService.getMyReservations(userId));
     }
 
     @PostMapping

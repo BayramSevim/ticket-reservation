@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class ReservationService {
@@ -59,6 +60,12 @@ public class ReservationService {
     public ReservationResponse getReservation(Long reservationId,Long userId) {
         Reservation reservation =  findOwned(reservationId, userId);
         return ReservationResponse.from(reservation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> getMyReservations(Long userId) {
+        List<Reservation> reservations = reservationRepository.findByUserId(userId);
+        return reservations.stream().map(ReservationResponse::from).toList();
     }
 
     private Reservation findOwned(Long reservationId, Long userId) {

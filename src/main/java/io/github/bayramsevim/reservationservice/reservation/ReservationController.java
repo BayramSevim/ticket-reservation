@@ -20,8 +20,9 @@ public class ReservationController {
     }
 
     @GetMapping("/{id}")
-    public ReservationResponse getReservation(@PathVariable Long id) {
-        return reservationService.getReservation(id);
+    public ReservationResponse getReservation(@PathVariable Long id ,@AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+        return reservationService.getReservation(id, userId);
     }
 
     @PostMapping
@@ -35,16 +36,20 @@ public class ReservationController {
     }
 
     @PostMapping("/{id}/confirm")
-    public ResponseEntity<ReservationResponse> confirm(@PathVariable Long id) {
-        ReservationResponse response = reservationService.confirm(id);
+    public ResponseEntity<ReservationResponse> confirm(@PathVariable Long id,
+                                                       @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+        ReservationResponse response = reservationService.confirm(id, userId);
         return ResponseEntity
                 .ok()
                 .body(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ReservationResponse> cancel(@PathVariable Long id) {
-        ReservationResponse response = reservationService.cancel(id);
+    public ResponseEntity<ReservationResponse> cancel(@PathVariable Long id,
+                                                      @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+        ReservationResponse response = reservationService.cancel(id, userId);
         return ResponseEntity
                 .ok()
                 .body(response);

@@ -41,15 +41,21 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse confirm(Long reservationId){
+    public ReservationResponse confirm(Long reservationId,Long userId){
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        if(!reservation.getUser().getId().equals(userId)){
+            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
+        }
         reservation.confirm(Instant.now(clock));
         return ReservationResponse.from(reservation);
     }
 
     @Transactional
-    public ReservationResponse cancel(Long reservationId){
+    public ReservationResponse cancel(Long reservationId,Long userId){
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        if(!reservation.getUser().getId().equals(userId)){
+            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
+        }
         reservation.cancel(Instant.now(clock));
         return ReservationResponse.from(reservation);
     }
@@ -57,6 +63,9 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public ReservationResponse getReservation(Long reservationId,Long userId) {
         Reservation reservation =  reservationRepository.findById(reservationId).orElseThrow();
+        if(!reservation.getUser().getId().equals(userId)){
+            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
+        }
         return ReservationResponse.from(reservation);
     }
 }

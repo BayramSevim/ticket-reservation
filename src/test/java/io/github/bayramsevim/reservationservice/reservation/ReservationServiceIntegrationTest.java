@@ -43,7 +43,7 @@ public class ReservationServiceIntegrationTest {
         User user = aSavedUser();
 
         ReservationResponse held = reservationService.hold(user.getId(), seat.getId());
-        reservationService.confirm(held.id());
+        reservationService.confirm(held.id(), user.getId());
 
         Reservation fromDb = reservationRepository.findById(held.id()).orElseThrow();
         assertEquals(ReservationStatus.CONFIRMED, fromDb.getStatus());
@@ -55,7 +55,7 @@ public class ReservationServiceIntegrationTest {
         User user = aSavedUser();
 
         ReservationResponse held = reservationService.hold(user.getId(), seat.getId());
-        reservationService.cancel(held.id());
+        reservationService.cancel(held.id(), user.getId());
 
 
         Reservation fromDb = reservationRepository.findById(held.id()).orElseThrow();

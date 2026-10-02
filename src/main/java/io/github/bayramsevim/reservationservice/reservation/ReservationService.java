@@ -1,5 +1,6 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
 import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.user.User;
@@ -42,30 +43,29 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse confirm(Long reservationId,Long userId){
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
-        if(!reservation.getUser().getId().equals(userId)){
-            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
-        }
+        Reservation reservation = findOwned(reservationId, userId);
         reservation.confirm(Instant.now(clock));
         return ReservationResponse.from(reservation);
     }
 
     @Transactional
     public ReservationResponse cancel(Long reservationId,Long userId){
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
-        if(!reservation.getUser().getId().equals(userId)){
-            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
-        }
+        Reservation reservation = findOwned(reservationId, userId);
         reservation.cancel(Instant.now(clock));
         return ReservationResponse.from(reservation);
     }
 
     @Transactional(readOnly = true)
     public ReservationResponse getReservation(Long reservationId,Long userId) {
-        Reservation reservation =  reservationRepository.findById(reservationId).orElseThrow();
-        if(!reservation.getUser().getId().equals(userId)){
-            throw new IllegalStateException("Kullanıcı bu rezervasyona ait değil");
-        }
+        Reservation reservation =  findOwned(reservationId, userId);
         return ReservationResponse.from(reservation);
+    }
+
+    private Reservation findOwned(Long reservationId, Long userId) {
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        if (!reservation.getUser().getId().equals(userId)) {
+            throw new ForbiddenOperationException("Kullanıcının bu işleme yetkisi yok");
+        }
+        return reservation;
     }
 }

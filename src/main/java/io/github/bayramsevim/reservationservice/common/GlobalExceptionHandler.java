@@ -1,5 +1,6 @@
 package io.github.bayramsevim.reservationservice.common;
 
+import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
 import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -43,5 +44,11 @@ public class GlobalExceptionHandler {
     public ProblemDetail invalidCredentialsException(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ProblemDetail forbiddenOperationException(ForbiddenOperationException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, ex.getMessage());
     }
 }

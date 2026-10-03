@@ -3,6 +3,7 @@ package io.github.bayramsevim.reservationservice.common;
 import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
 import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
 import io.github.bayramsevim.reservationservice.exception.NotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -61,5 +62,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ProblemDetail handleNotFoundException(NotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Kayıt mevcut verilerle çakışıyor");
     }
 }

@@ -36,12 +36,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    public ProblemDetail noSuchElementException(NoSuchElementException ex) {
-        return ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT, ex.getMessage());
-    }
-
     @ExceptionHandler(InvalidCredentialsException.class)
     public ProblemDetail invalidCredentialsException(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(

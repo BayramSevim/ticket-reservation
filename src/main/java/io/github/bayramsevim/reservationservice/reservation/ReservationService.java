@@ -1,6 +1,8 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
 import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
+import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
+import io.github.bayramsevim.reservationservice.exception.NotFoundException;
 import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.user.User;
@@ -32,8 +34,8 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse hold(Long userId, Long seatId){
-        User user = userRepository.findById(userId).orElseThrow();
-        Seat seat = seatRepository.findById(seatId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
+        Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
 
         Instant now = Instant.now(clock);
         Instant expiresAt = now.plus(Duration.ofMinutes(10));
@@ -69,7 +71,7 @@ public class ReservationService {
     }
 
     private Reservation findOwned(Long reservationId, Long userId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow();
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException("Reservation not found"));
         if (!reservation.getUser().getId().equals(userId)) {
             throw new ForbiddenOperationException("Kullanıcının bu işleme yetkisi yok");
         }

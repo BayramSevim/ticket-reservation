@@ -6,6 +6,7 @@ import io.github.bayramsevim.reservationservice.exception.NotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -61,5 +62,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Kayıt mevcut verilerle çakışıyor");
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Kayıt başka bir işlem tarafından güncellendi. Lütfen tekrar deneyin.");
     }
 }

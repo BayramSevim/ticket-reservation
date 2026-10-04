@@ -17,4 +17,8 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         """) */
     @EntityGraph(attributePaths = {"seat", "seat.show"})
     List<Reservation> findByUserId(@Param("userId") Long userId);
+
+    boolean existsBySeatIdAndStatusIn(Long seatId, List<ReservationStatus> statuses);
+
+    long countBySeatId(Long seatId);
 }

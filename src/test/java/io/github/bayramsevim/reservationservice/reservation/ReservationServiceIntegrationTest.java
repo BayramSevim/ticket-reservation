@@ -12,7 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,6 +66,32 @@ public class ReservationServiceIntegrationTest {
         Reservation fromDb = reservationRepository.findById(held.id()).orElseThrow();
         assertEquals(ReservationStatus.CANCELLED, fromDb.getStatus());
         assertNotNull(fromDb.getCancelledAt());
+    }
+
+
+    @Test
+    void whenFiftyUsersHoldSameSeatConcurrently_onlyOneSucceeds() throws InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+        Seat seat = aSavedSeat();
+        List<Long> userIds = new ArrayList<>();
+        for(int i = 0; i < 50; i++) {
+            userIds.add(aSavedUser().getId());
+        }
+
+        for(Long userId : userIds) {
+            executor.submit(() -> {
+                try {
+                    reservationService.hold(userId, seat.getId());
+                } catch (Exception e) {
+                    // Ignore exceptions for this test
+                }
+            });
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        assertEquals(1, reservationRepository.countBySeatId(seat.getId()));
     }
 
 }

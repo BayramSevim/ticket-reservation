@@ -37,6 +37,10 @@ public class ReservationService {
         User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
         Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
 
+        boolean seatTaken = reservationRepository.existsBySeatIdAndStatusIn(seatId, List.of(ReservationStatus.HELD, ReservationStatus.CONFIRMED));
+        if (seatTaken)
+            throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
+
         Instant now = Instant.now(clock);
         Instant expiresAt = now.plus(Duration.ofMinutes(10));
 

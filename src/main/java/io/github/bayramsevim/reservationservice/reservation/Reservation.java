@@ -43,6 +43,9 @@ public class Reservation {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
+    @Version
+    private Long version;
+
     protected Reservation() {
     }
 

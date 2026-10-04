@@ -9,8 +9,10 @@ import io.github.bayramsevim.reservationservice.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +94,24 @@ public class ReservationServiceIntegrationTest {
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
         assertEquals(1, reservationRepository.countBySeatId(seat.getId()));
+    }
+
+    @Test
+    void staleExpireDoesNotOverwriteConfirmedReservation(){
+        Seat seat = aSavedSeat();
+        User user = aSavedUser();
+        ReservationResponse reservation = reservationService.hold(user.getId(), seat.getId());
+        Reservation copyA = reservationRepository.findById(reservation.id()).orElseThrow();
+        Reservation copyB = reservationRepository.findById(reservation.id()).orElseThrow();
+
+        copyA.confirm(Instant.now());
+        reservationRepository.save(copyA);
+
+        copyB.expire(Instant.now().plus(Duration.ofMinutes(11)));
+        assertThrows(ObjectOptimisticLockingFailureException.class, () -> reservationRepository.save(copyB));
+
+        assertEquals(ReservationStatus.CONFIRMED, reservationRepository.findById(reservation.id()).orElseThrow().getStatus());
+
     }
 
 }

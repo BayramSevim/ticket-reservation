@@ -37,7 +37,7 @@ public class ReservationServiceTest {
         Seat seat = new Seat(show, "11-A", new BigDecimal("23.40"));
         User user = new User("ali@example.com", "hash");
 
-        when(seatRepository.findById(1L)).thenReturn(Optional.of(seat));
+        when(seatRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(seat));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(call -> call.getArgument(0));
 

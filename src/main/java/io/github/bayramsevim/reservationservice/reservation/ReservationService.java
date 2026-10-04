@@ -36,7 +36,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponse hold(Long userId, Long seatId){
         User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
-        Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
+        Seat seat = seatRepository.findByIdForUpdate(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
 
         boolean seatTaken = reservationRepository.existsBySeatIdAndStatusIn(seatId, List.of(ReservationStatus.HELD, ReservationStatus.CONFIRMED));
         if (seatTaken)

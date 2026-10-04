@@ -7,6 +7,7 @@ import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.user.User;
 import io.github.bayramsevim.reservationservice.user.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +46,12 @@ public class ReservationService {
         Instant expiresAt = now.plus(Duration.ofMinutes(10));
 
         Reservation reservation = new Reservation(seat,user,expiresAt);
-        return ReservationResponse.from(reservationRepository.save(reservation));
+        try{
+           return ReservationResponse.from(reservationRepository.save(reservation));
+        }
+        catch (DataIntegrityViolationException e){
+            throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
+        }
     }
 
     @Transactional

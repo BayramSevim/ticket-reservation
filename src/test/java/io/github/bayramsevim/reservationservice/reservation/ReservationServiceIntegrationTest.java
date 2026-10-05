@@ -114,4 +114,17 @@ public class ReservationServiceIntegrationTest {
 
     }
 
+    @Test
+    void expireOverdueMarksStaleHoldsAsExpired(){
+        Seat seat = aSavedSeat();
+        User user = aSavedUser();
+        Reservation reservation = new Reservation(seat, user,  Instant.now().minusSeconds(60));
+        reservationRepository.save(reservation);
+
+        reservationService.expireOverdue();
+
+        assertEquals(ReservationStatus.EXPIRED, reservationRepository.findById(reservation.getId()).orElseThrow().getStatus());
+
+    }
+
 }

@@ -94,6 +94,19 @@ public class ReservationService {
         return reservations.stream().map(ReservationResponse::from).toList();
     }
 
+    @Transactional
+    public int expireOverdue() {
+        Instant now = Instant.now(clock);
+        int expiredCount = 0;
+        List<Reservation> overdueReservations = reservationRepository.findByStatusAndExpiresAtBefore(ReservationStatus.HELD, now);
+        for (Reservation reservation : overdueReservations) {
+            reservation.expire(now);
+            seatHoldService.release(reservation.getSeat().getId());
+            expiredCount++;
+        }
+        return expiredCount;
+    }
+
     private Reservation findOwned(Long reservationId, Long userId) {
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException("Reservation not found"));
         if (!reservation.getUser().getId().equals(userId)) {

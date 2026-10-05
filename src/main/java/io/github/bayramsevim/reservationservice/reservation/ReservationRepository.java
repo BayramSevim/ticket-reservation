@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation,Long> {
@@ -21,4 +22,7 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     boolean existsBySeatIdAndStatusIn(Long seatId, List<ReservationStatus> statuses);
 
     long countBySeatId(Long seatId);
+
+    List<Reservation> findByStatusAndExpiresAtBefore(ReservationStatus status, Instant expiresAt);
+
 }

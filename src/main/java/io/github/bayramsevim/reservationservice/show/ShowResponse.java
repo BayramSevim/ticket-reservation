@@ -1,4 +1,5 @@
 package io.github.bayramsevim.reservationservice.show;
+import java.io.Serializable;
 import java.time.Instant;
 
 public record ShowResponse(
@@ -8,7 +9,7 @@ public record ShowResponse(
         Instant startsAt,
         Instant saleStartsAt,
         Instant saleEndsAt
-) {
+) implements Serializable {
     public static ShowResponse from(Show show) {
         return new ShowResponse(
                 show.getId(),

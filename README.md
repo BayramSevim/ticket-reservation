@@ -76,9 +76,41 @@ The rules live inside the `Reservation` entity (no setters, behavior methods ins
 **Why:** A "check if it exists, then insert" in code would let two concurrent requests both insert; the constraint prevents that for certain. The exception message contains table and column names, so it is not sent to the client.
 **Alternative:** Checking only in code. Not reliable under concurrent requests.
 
+## Concurrency: preventing double booking
+
+The core rule of the system: **a seat can have at most one active reservation.** The naive implementation ("check if the seat is free, then insert") breaks under concurrent requests, because the check and the insert are two separate steps (check-then-act). `@Transactional` does not help here: each request runs in its own transaction and, under PostgreSQL's default `READ COMMITTED` isolation, cannot see the other's uncommitted insert.
+
+**How it was proven.** An integration test starts 50 threads that hold the same seat at the same time (`whenFiftyUsersHoldSameSeatConcurrently_onlyOneSucceeds`). With the naive code it failed with `expected: <1> but was: <10>`: ten reservations for one seat. The number 10 is the default HikariCP pool size, i.e. how many transactions could run the check simultaneously.
+
+Three tools are used, each for the problem it fits:
+
+| Problem | Tool | Where | Cost |
+|---|---|---|---|
+| Two active reservations for the same seat | Partial unique index | `V3` migration, `uq_active_reservation_per_seat` | Losers find out through a failed `INSERT` |
+| Wasted inserts under heavy contention | Pessimistic lock on the seat row | `SeatRepository.findByIdForUpdate`, `@Lock(PESSIMISTIC_WRITE)` | Waiting requests hold a database connection |
+| A stale copy overwriting a newer state (lost update) | Optimistic lock | `@Version` on `Reservation`, `V4` migration | The losing request gets 409 and must retry |
+
+### Partial unique index: the guarantee
+**Decision:** `CREATE UNIQUE INDEX ... ON reservations (seat_id) WHERE status IN ('HELD', 'CONFIRMED')`.
+**Why:** A plain `UNIQUE (seat_id)` would make a seat unsellable forever after its first cancellation, because cancelled and expired rows are kept for history. The partial index applies uniqueness only to active rows. The check and the write happen atomically inside the database, so no code path can bypass it.
+**Note:** The index could not be created at first because existing rows already violated the rule. The migration first marks stale `HELD` rows as `EXPIRED`, then creates the index. A migration has to handle existing data, not only the schema.
+
+### Pessimistic lock: queueing instead of failing
+**Decision:** `hold` reads the seat with `SELECT ... FOR NO KEY UPDATE`. The lock is held until the transaction commits, so the check and the insert both happen while the seat row is locked.
+**Why:** With the index alone, 10 transactions attempted an insert and 9 were rejected. With the lock, requests queue on the seat row: in the same test only 1 insert is attempted and no constraint violation occurs.
+**Why both:** The lock only protects code that asks for it. A future code path that forgets to lock would still be stopped by the index. The index guarantees correctness; the lock makes conflicts cheaper.
+
+### Optimistic lock: protecting updates to the same reservation
+**Decision:** `Reservation` has a `@Version` column. An update succeeds only if the version is still the one that was read; otherwise Hibernate throws `ObjectOptimisticLockingFailureException`, which is mapped to 409.
+**Why:** Two operations can read the same `HELD` reservation at the same time, for example a user confirming while an expiry job expires it. Without versioning the last write silently wins and a paid reservation ends up `EXPIRED`. This was reproduced in a test (`staleExpireDoesNotOverwriteConfirmedReservation`) that failed with `expected: <CONFIRMED> but was: <EXPIRED>` before `@Version` was added.
+**Why not a pessimistic lock here:** These conflicts are rare, so locking every read would cost more than an occasional retry.
+
+### Deadlocks
+Reproduced manually with two `psql` sessions locking two seats in opposite order: PostgreSQL detected the cycle and aborted one transaction with `deadlock detected`. Repeating the experiment with both sessions locking in the same order (lowest id first) produced no error; the second session simply waited. `hold` currently locks a single seat, so it cannot deadlock. If multi-seat holds are added, seat ids must be sorted before locking.
+
 ## Roadmap
 
-- Concurrent reservations for the same seat (locking, isolation levels)
+- Scheduled job that expires stale holds
 - Caching and rate limiting with Redis
 - Notification service with Kafka (outbox)
 - Testcontainers, CI

@@ -78,6 +78,7 @@ public class ReservationService {
     public ReservationResponse cancel(Long reservationId,Long userId){
         Reservation reservation = findOwned(reservationId, userId);
         reservation.cancel(Instant.now(clock));
+        seatHoldService.release(reservation.getSeat().getId());
         return ReservationResponse.from(reservation);
     }
 

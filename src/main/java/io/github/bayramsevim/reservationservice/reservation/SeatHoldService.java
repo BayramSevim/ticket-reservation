@@ -21,6 +21,10 @@ public class SeatHoldService {
         return Boolean.TRUE.equals(held);
     }
 
+    public void release(Long seatId) {
+        redisTemplate.delete(key(seatId));
+    }
+
     private String key(Long seatId) {
         return "seat:" + seatId;
     }

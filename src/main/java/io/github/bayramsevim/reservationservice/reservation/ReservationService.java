@@ -41,23 +41,30 @@ public class ReservationService {
         if (!seatHeld) {
             throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
         }
-        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
-        Seat seat = seatRepository.findByIdForUpdate(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
+       try{
+           User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
+           Seat seat = seatRepository.findByIdForUpdate(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
 
-        boolean seatTaken = reservationRepository.existsBySeatIdAndStatusIn(seatId, List.of(ReservationStatus.HELD, ReservationStatus.CONFIRMED));
-        if (seatTaken)
-            throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
+           boolean seatTaken = reservationRepository.existsBySeatIdAndStatusIn(seatId, List.of(ReservationStatus.HELD, ReservationStatus.CONFIRMED));
+           if (seatTaken)
+               throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
 
-        Instant now = Instant.now(clock);
-        Instant expiresAt = now.plus(Duration.ofMinutes(10));
+           Instant now = Instant.now(clock);
+           Instant expiresAt = now.plus(Duration.ofMinutes(10));
 
-        Reservation reservation = new Reservation(seat,user,expiresAt);
-        try{
-           return ReservationResponse.from(reservationRepository.save(reservation));
-        }
-        catch (DataIntegrityViolationException e){
-            throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
-        }
+           Reservation reservation = new Reservation(seat,user,expiresAt);
+
+           try{
+               return ReservationResponse.from(reservationRepository.save(reservation));
+           }
+           catch (DataIntegrityViolationException e){
+               throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
+           }
+       }
+       catch (Exception e){
+              seatHoldService.release(seatId);
+              throw e;
+       }
     }
 
     @Transactional

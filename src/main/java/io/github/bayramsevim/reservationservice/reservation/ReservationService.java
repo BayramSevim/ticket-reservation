@@ -22,19 +22,25 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final SeatHoldService seatHoldService;
 
     public ReservationService(ReservationRepository reservationRepository,
                               SeatRepository seatRepository,
                               UserRepository userRepository,
-                              Clock clock) {
+                              Clock clock, SeatHoldService seatHoldService) {
         this.reservationRepository = reservationRepository;
         this.seatRepository = seatRepository;
         this.userRepository = userRepository;
         this.clock = clock;
+        this.seatHoldService = seatHoldService;
     }
 
     @Transactional
     public ReservationResponse hold(Long userId, Long seatId){
+        boolean seatHeld = seatHoldService.tryHold(seatId, userId);
+        if (!seatHeld) {
+            throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new InvalidCredentialsException("User not authorized"));
         Seat seat = seatRepository.findByIdForUpdate(seatId).orElseThrow(() -> new NotFoundException("Seat not found"));
 

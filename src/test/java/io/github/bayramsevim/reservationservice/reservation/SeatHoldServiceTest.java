@@ -21,7 +21,6 @@ public class SeatHoldServiceTest {
     @Test
     void whenFiftyUsersHoldSameSeatConcurrently_onlyOneSucceeds() throws InterruptedException {
         int numberOfUsers = 50;
-        long showId = 1L;
         long seatId = System.nanoTime();
         AtomicInteger successCount = new AtomicInteger();
 
@@ -29,7 +28,7 @@ public class SeatHoldServiceTest {
         for(int i = 0;i < numberOfUsers; i++){
             long userId = i;
             executorService.submit(()-> {
-                if(seatHoldService.tryHold(showId, seatId, userId)){
+                if(seatHoldService.tryHold(seatId, userId)){
                     successCount.incrementAndGet();
                 }
             });

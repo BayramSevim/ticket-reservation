@@ -15,13 +15,13 @@ public class SeatHoldService {
         this.redisTemplate = redisTemplate;
     }
 
-    public boolean tryHold(Long showId, Long seatId, Long userId) {
+    public boolean tryHold(Long seatId, Long userId) {
         Boolean held = redisTemplate.opsForValue()
-                .setIfAbsent(key(showId, seatId), userId.toString(), HOLD_DURATION);
+                .setIfAbsent(key(seatId), userId.toString(), HOLD_DURATION);
         return Boolean.TRUE.equals(held);
     }
 
-    private String key(Long showId, Long seatId) {
-        return "seat:" + showId + ":" + seatId;
+    private String key(Long seatId) {
+        return "seat:" + seatId;
     }
 }

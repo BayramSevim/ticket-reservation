@@ -44,6 +44,7 @@ public class ReservationServiceTest {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(call -> call.getArgument(0));
         when(seatHoldService.tryHold(1L, 2L)).thenReturn(true);
+        when(rateLimitService.tryAcquire(2L)).thenReturn(true);
 
         ReservationResponse response = service.hold(2L, 1L);
 

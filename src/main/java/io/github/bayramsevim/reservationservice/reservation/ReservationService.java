@@ -1,8 +1,10 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import io.github.bayramsevim.reservationservice.common.RateLimitService;
 import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
 import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
 import io.github.bayramsevim.reservationservice.exception.NotFoundException;
+import io.github.bayramsevim.reservationservice.exception.RateLimitExceededException;
 import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.user.User;
@@ -23,20 +25,25 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final Clock clock;
     private final SeatHoldService seatHoldService;
+    private final RateLimitService rateLimitService;
 
     public ReservationService(ReservationRepository reservationRepository,
                               SeatRepository seatRepository,
                               UserRepository userRepository,
-                              Clock clock, SeatHoldService seatHoldService) {
+                              Clock clock, SeatHoldService seatHoldService, RateLimitService rateLimitService) {
         this.reservationRepository = reservationRepository;
         this.seatRepository = seatRepository;
         this.userRepository = userRepository;
         this.clock = clock;
         this.seatHoldService = seatHoldService;
+        this.rateLimitService = rateLimitService;
     }
 
     @Transactional
     public ReservationResponse hold(Long userId, Long seatId){
+        if (!rateLimitService.tryAcquire(userId)) {
+            throw new RateLimitExceededException("Rate limit exceeded. Please try again later.");
+        }
         boolean seatHeld = seatHoldService.tryHold(seatId, userId);
         if (!seatHeld) {
             throw new IllegalStateException("Koltuk zaten rezerve edilmiş veya tutulmuş");

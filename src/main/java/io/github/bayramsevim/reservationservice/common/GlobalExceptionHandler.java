@@ -3,6 +3,7 @@ package io.github.bayramsevim.reservationservice.common;
 import io.github.bayramsevim.reservationservice.exception.ForbiddenOperationException;
 import io.github.bayramsevim.reservationservice.exception.InvalidCredentialsException;
 import io.github.bayramsevim.reservationservice.exception.NotFoundException;
+import io.github.bayramsevim.reservationservice.exception.RateLimitExceededException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -67,5 +68,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ProblemDetail handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Kayıt başka bir işlem tarafından güncellendi. Lütfen tekrar deneyin.");
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ProblemDetail handleRateLimitExceeded(RateLimitExceededException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 }

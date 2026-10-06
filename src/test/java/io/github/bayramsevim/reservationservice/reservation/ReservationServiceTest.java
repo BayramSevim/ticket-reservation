@@ -1,5 +1,6 @@
 package io.github.bayramsevim.reservationservice.reservation;
 
+import io.github.bayramsevim.reservationservice.common.RateLimitService;
 import io.github.bayramsevim.reservationservice.seat.Seat;
 import io.github.bayramsevim.reservationservice.seat.SeatRepository;
 import io.github.bayramsevim.reservationservice.show.Show;
@@ -24,10 +25,11 @@ public class ReservationServiceTest {
     private final SeatRepository seatRepository = mock(SeatRepository.class);
     private final UserRepository userRepository = mock(UserRepository.class);
     private final SeatHoldService seatHoldService = mock(SeatHoldService.class);
+    private final RateLimitService rateLimitService = mock(RateLimitService.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-15T18:00:00Z"), ZoneOffset.UTC);
 
     private final ReservationService service =
-            new ReservationService(reservationRepository, seatRepository, userRepository, clock, seatHoldService);
+            new ReservationService(reservationRepository, seatRepository, userRepository, clock, seatHoldService, rateLimitService);
 
     @Test
     void holdCreatesHeldReservationThatExpiresInTenMinutes() {

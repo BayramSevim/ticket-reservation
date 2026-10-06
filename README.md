@@ -147,7 +147,6 @@ PostgreSQL is the source of truth. Redis is used for four jobs where a shared, f
 ### Known limitations
 - `release` deletes the hold key without checking who owns it.
 - With more than one application instance the expiry job would run on each of them.
-- `RateLimitService` has no test of its own; it is verified by hand (10 × pass, then 429).
 
 ## Roadmap
 

@@ -8,11 +8,12 @@ The reservation service of a ticket reservation system. Users list shows and sea
 
 ```bash
 docker compose up -d      # PostgreSQL (5433) and Redis (6379)
+cd reservation-service
 ./mvnw spring-boot:run    # application at http://localhost:8080
 ./mvnw test               # tests (PostgreSQL and Redis must be running)
 ```
 
-The database schema is created by Flyway on startup (`src/main/resources/db/migration`). Hibernate never changes the schema, it only validates it (`ddl-auto: validate`).
+The database schema is created by Flyway on startup (`reservation-service/src/main/resources/db/migration`). Hibernate never changes the schema, it only validates it (`ddl-auto: validate`).
 
 ## Endpoints
 

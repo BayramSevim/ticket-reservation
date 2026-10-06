@@ -1,3 +1,5 @@
+name: reservation-service
+
 services:
   postgres:
     image: postgres:17

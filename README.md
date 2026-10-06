@@ -32,7 +32,7 @@ The database schema is created by Flyway on startup (`src/main/resources/db/migr
 | POST | `/reservations/{id}/confirm` | Owner | Confirm |
 | DELETE | `/reservations/{id}` | Owner | Cancel |
 
-Errors are returned as RFC 9457 `ProblemDetail`: 400 (validation), 401 (missing/invalid credentials), 403 (not allowed), 404 (not found), 409 (state conflict).
+Errors are returned as RFC 9457 `ProblemDetail`: 400 (validation), 401 (missing/invalid credentials), 403 (not allowed), 404 (not found), 409 (state conflict), 429 (rate limit exceeded).
 
 ## Reservation states
 
@@ -108,9 +108,48 @@ Three tools are used, each for the problem it fits:
 ### Deadlocks
 Reproduced manually with two `psql` sessions locking two seats in opposite order: PostgreSQL detected the cycle and aborted one transaction with `deadlock detected`. Repeating the experiment with both sessions locking in the same order (lowest id first) produced no error; the second session simply waited. `hold` currently locks a single seat, so it cannot deadlock. If multi-seat holds are added, seat ids must be sorted before locking.
 
+## Redis
+
+PostgreSQL is the source of truth. Redis is used for four jobs where a shared, fast store with built-in expiry fits better than a table.
+
+| Job | Key | Expiry |
+|---|---|---|
+| Refresh tokens | random UUID → user | 7 days |
+| Seat hold gate | `seat_hold:{seatId}` → user id | 10 minutes |
+| Cache | `shows`, `seats::{showId}` | 5 minutes |
+| Rate limit | `rate:hold:{userId}` → counter | 60 seconds |
+
+### Seat hold gate
+**Decision:** Before touching the database, `hold` runs `SET seat_hold:{seatId} NX EX 600`. Only the request that sets the key continues to PostgreSQL; the others get 409 immediately.
+**Why:** Redis executes commands one at a time, so `SET NX` is atomic: out of 50 concurrent requests exactly one wins. The losers never open a transaction or wait for a row lock, which protects the connection pool (10 connections).
+**Trade-off:** Redis and PostgreSQL are two systems, so they can disagree. If the database step fails, or the reservation is cancelled or expires, the key is released explicitly; otherwise the seat would stay blocked until the TTL runs out. The gate is an optimization, not the guarantee: the pessimistic lock and the partial unique index still decide who owns the seat.
+
+### Scheduled expiry
+**Decision:** A `@Scheduled` job runs every minute, marks `HELD` reservations whose `expires_at` has passed as `EXPIRED`, and releases their Redis keys.
+**Why:** The Redis key disappears by itself, but the row in PostgreSQL does not. Without the job a stale `HELD` row would keep the partial unique index occupied.
+
+### Cache-aside for read endpoints
+**Decision:** `GET /shows` and `GET /shows/{showId}/seats` are cached with `@Cacheable`. Creating a show evicts the whole `shows` cache; adding a seat evicts only that show's entry (`key = "#showId"`). Every entry also has a 5-minute TTL.
+**Why:** These lists are read far more often than they change. Eviction keeps the cache correct for writes that go through the service; the TTL is the safety net for writes that do not (a manual `UPDATE`, a future method that forgets `@CacheEvict`).
+**Trade-off:** Values are stored as JSON, not Java serialization, so they are readable in `redis-cli` and do not depend on class names. The price is one typed serializer per cache in `CacheConfig`; a cache without its own configuration falls back to Java serialization and fails for records that are not `Serializable`.
+
+### Rate limiting hold attempts
+**Decision:** Each user gets 10 hold attempts per 60 seconds (fixed window). The counter is incremented first, before the seat gate and the database; over the limit the API returns 429.
+**Why Redis and not an in-memory map:** With several application instances each would count separately and the real limit would be multiplied. Redis gives all instances one counter, and expiry resets it.
+**Why a Lua script:** `INCR` and `EXPIRE` are two commands. If the application stops between them, the counter has no TTL and the user is blocked forever once it reaches the limit. The script runs both as one atomic step.
+**Trade-off:** A fixed window allows a burst at the boundary (10 requests at the end of one window and 10 at the start of the next). Failed attempts count too, on purpose.
+
+### What happens if Redis is down
+- **Holds, cancels, cached reads, refresh, logout:** the request fails with 500. The service fails closed; there is no fallback path yet.
+- **Requests with a valid access token that do not touch Redis** (confirm, listing own reservations) keep working, because a JWT is verified without Redis.
+- **Data:** no reservation is lost, since reservations live in PostgreSQL. Refresh tokens are lost unless Redis persistence (RDB/AOF) is enabled, so users have to log in again. Seat hold keys and counters are also gone, but the database lock and unique index still prevent double booking.
+
+### Known limitations
+- `release` deletes the hold key without checking who owns it.
+- With more than one application instance the expiry job would run on each of them.
+- `RateLimitService` has no test of its own; it is verified by hand (10 × pass, then 429).
+
 ## Roadmap
 
-- Scheduled job that expires stale holds
-- Caching and rate limiting with Redis
 - Notification service with Kafka (outbox)
 - Testcontainers, CI

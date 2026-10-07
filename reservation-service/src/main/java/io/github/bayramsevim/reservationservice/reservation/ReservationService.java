@@ -26,17 +26,19 @@ public class ReservationService {
     private final Clock clock;
     private final SeatHoldService seatHoldService;
     private final RateLimitService rateLimitService;
+    private final ReservationEventPublisher reservationEventPublisher;
 
     public ReservationService(ReservationRepository reservationRepository,
                               SeatRepository seatRepository,
                               UserRepository userRepository,
-                              Clock clock, SeatHoldService seatHoldService, RateLimitService rateLimitService) {
+                              Clock clock, SeatHoldService seatHoldService, RateLimitService rateLimitService, ReservationEventPublisher reservationEventPublisher) {
         this.reservationRepository = reservationRepository;
         this.seatRepository = seatRepository;
         this.userRepository = userRepository;
         this.clock = clock;
         this.seatHoldService = seatHoldService;
         this.rateLimitService = rateLimitService;
+        this.reservationEventPublisher = reservationEventPublisher;
     }
 
     @Transactional
@@ -78,6 +80,7 @@ public class ReservationService {
     public ReservationResponse confirm(Long reservationId,Long userId){
         Reservation reservation = findOwned(reservationId, userId);
         reservation.confirm(Instant.now(clock));
+        reservationEventPublisher.publishConfirmed(reservation.getId());
         return ReservationResponse.from(reservation);
     }
 

@@ -26,10 +26,11 @@ public class ReservationServiceTest {
     private final UserRepository userRepository = mock(UserRepository.class);
     private final SeatHoldService seatHoldService = mock(SeatHoldService.class);
     private final RateLimitService rateLimitService = mock(RateLimitService.class);
+    private final ReservationEventPublisher reservationEventPublisher = mock(ReservationEventPublisher.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-15T18:00:00Z"), ZoneOffset.UTC);
 
     private final ReservationService service =
-            new ReservationService(reservationRepository, seatRepository, userRepository, clock, seatHoldService, rateLimitService);
+            new ReservationService(reservationRepository, seatRepository, userRepository, clock, seatHoldService, rateLimitService,reservationEventPublisher);
 
     @Test
     void holdCreatesHeldReservationThatExpiresInTenMinutes() {

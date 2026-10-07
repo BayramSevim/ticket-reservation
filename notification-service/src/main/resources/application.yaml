@@ -9,3 +9,10 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         "[spring.json.value.default.type]": io.github.bayramsevim.notification_service.reservation.ReservationConfirmedEvent
+  datasource:
+    url: jdbc:postgresql://localhost:5433/notification
+    username: postgres
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: validate

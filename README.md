@@ -1,19 +1,24 @@
-# Ticket Reservation — reservation-service
+# Ticket Reservation
 
-The reservation service of a ticket reservation system. Users list shows and seats, hold a seat for 10 minutes, then confirm or cancel before the hold expires.
+A ticket reservation system made of two services. In `reservation-service` users list shows and seats, hold a seat for 10 minutes, then confirm or cancel before the hold expires. `notification-service` listens for reservation events on Kafka and sends the ticket email (simulated with a log line).
 
-**Tech stack:** Java 21, Spring Boot 4.1, Spring Data JPA (Hibernate), PostgreSQL 17, Flyway, Spring Security (JWT), Redis 7, JUnit 5, Mockito.
+**Tech stack:** Java 21, Spring Boot 4.1, Spring Data JPA (Hibernate), PostgreSQL 17, Flyway, Spring Security (JWT), Redis 7, Apache Kafka 4, JUnit 5, Mockito.
 
 ## Running
 
 ```bash
-docker compose up -d      # PostgreSQL (5433) and Redis (6379)
+docker compose up -d      # PostgreSQL (5433), Redis (6379) and Kafka (9092)
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE notification;"   # first run only
+
 cd reservation-service
-./mvnw spring-boot:run    # application at http://localhost:8080
-./mvnw test               # tests (PostgreSQL and Redis must be running)
+./mvnw spring-boot:run    # API at http://localhost:8080
+./mvnw test               # tests (PostgreSQL, Redis and Kafka must be running)
+
+cd ../notification-service
+./mvnw spring-boot:run    # no HTTP port, consumes the "reservation-events" topic
 ```
 
-The database schema is created by Flyway on startup (`reservation-service/src/main/resources/db/migration`). Hibernate never changes the schema, it only validates it (`ddl-auto: validate`).
+Each service creates its own schema with Flyway on startup (`src/main/resources/db/migration`). Hibernate never changes the schema, it only validates it (`ddl-auto: validate`).
 
 ## Endpoints
 
@@ -149,7 +154,51 @@ PostgreSQL is the source of truth. Redis is used for four jobs where a shared, f
 - `release` deletes the hold key without checking who owns it.
 - With more than one application instance the expiry job would run on each of them.
 
+## Events: Kafka, outbox and notification-service
+
+When a reservation is confirmed the user gets a ticket email. The email is sent by a second service, `notification-service`, which only knows the reservation service through events on a Kafka topic.
+
+```
+confirm ──┐  one transaction
+          ├─ reservations: status = CONFIRMED
+          └─ outbox_events: ReservationConfirmedEvent (JSON)
+                    │
+        OutboxRelay (every second) ──> Kafka topic "reservation-events"
+                    │
+        notification-service ──> processed_events check ──> "send" email (logged)
+```
+
+### Why not send the email inside `confirm`
+**Problem:** `confirm` would depend on the email provider: a slow provider keeps the transaction and a database connection open, and a failing provider rolls back a reservation the user has already confirmed.
+**Decision:** `confirm` only records that something happened. Sending the email is another service's job, done at its own pace.
+
+### The event carries everything the consumer needs
+**Decision:** `ReservationConfirmedEvent` contains `eventId`, `reservationId`, `userEmail`, `showTitle`, `seatLabel` and `occurredAt`, not just an id.
+**Why:** With only an id, notification-service would have to call the reservation service to build the email, which brings back the dependency the event was meant to remove. The event is also a snapshot of the moment it happened.
+**Trade-off:** The fields are a contract between two services. Each service keeps its own copy of the record and no Java class name travels in the message.
+
+### Transactional outbox
+**Problem:** Writing to PostgreSQL and to Kafka are two separate steps. Sending directly from `confirm` loses the event if the application stops while the message is still buffered in memory, and sends an event for a reservation that was never confirmed if the commit fails after the send.
+**Decision:** `confirm` writes the event to an `outbox_events` table in the same transaction as the reservation. `OutboxRelay` reads unpublished rows every second, sends them to Kafka, waits for the acknowledgement and then sets `published_at`.
+**Verified by experiment:** With Kafka stopped, `confirm` still returned 200 in 18 ms. The application was then restarted and Kafka started; the event was delivered and the email was sent.
+**Trade-off:** Delivery is at-least-once: if the relay stops between the send and the update, the same row is sent again. The `eventId` is stored in the row, so a resend carries the same id.
+
+### Idempotent consumer
+**Problem:** Kafka delivers at least once. Reproduced by throwing an exception after the email was "sent": the same event was delivered 10 times (1 attempt + 9 retries), so the user would have received 10 emails.
+**Decision:** notification-service stores every handled `eventId` in a `processed_events` table (primary key) inside the same transaction as the handling, and skips an event whose id is already there.
+**Verified by experiment:** After resetting the consumer group offset to the beginning, the redelivered event was logged as already processed and no second email was sent.
+**Trade-off:** This is not exactly-once. The email provider and the database are still two systems, so a crash between sending and committing causes one more send. The window is small, not zero.
+
+### Each service owns its data
+`notification-service` has its own database (`notification`) on the same PostgreSQL instance and never reads the reservation tables.
+
+### Known limitations
+- The relay holds a database transaction while it waits for Kafka, and with more than one instance two relays could send the same row (`FOR UPDATE SKIP LOCKED` would fix this).
+- Published outbox rows and old `processed_events` rows are never cleaned up.
+- Only the confirmed event exists. Cancelled and expired events need a `type` field and dispatch in the consumer.
+- Tests publish to the real Kafka and the real database (Testcontainers is next).
+
 ## Roadmap
 
-- Notification service with Kafka (outbox)
+- Cancelled and expired events, more notification channels
 - Testcontainers, CI

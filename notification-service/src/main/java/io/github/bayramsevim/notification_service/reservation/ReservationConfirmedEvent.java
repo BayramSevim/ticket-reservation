@@ -1,4 +1,4 @@
-package io.github.bayramsevim.reservationservice.reservation;
+package io.github.bayramsevim.notification_service.reservation;
 
 import java.time.Instant;
 import java.util.UUID;

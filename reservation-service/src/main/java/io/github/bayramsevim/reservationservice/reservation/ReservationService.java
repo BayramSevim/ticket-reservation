@@ -80,7 +80,7 @@ public class ReservationService {
     public ReservationResponse confirm(Long reservationId,Long userId){
         Reservation reservation = findOwned(reservationId, userId);
         reservation.confirm(Instant.now(clock));
-        reservationEventPublisher.publishConfirmed(reservation.getId());
+        reservationEventPublisher.publishConfirmed(reservation);
         return ReservationResponse.from(reservation);
     }
 

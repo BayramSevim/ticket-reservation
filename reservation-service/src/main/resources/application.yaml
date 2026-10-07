@@ -16,6 +16,8 @@ spring:
   cache:
     redis:
       time-to-live: 5m
+  kafka:
+    bootstrap-servers: localhost:9092
 
 jwt:
   secret: ${JWT_SECRET:qAt8UmZW/lV1FQVheGiwamiHGRIPPdv/o2wge9qSKlo=}

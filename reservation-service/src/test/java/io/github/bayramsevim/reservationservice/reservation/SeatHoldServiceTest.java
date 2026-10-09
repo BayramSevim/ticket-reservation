@@ -3,6 +3,7 @@ package io.github.bayramsevim.reservationservice.reservation;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+@Import(TestcontainersConfig.class)
 public class SeatHoldServiceTest {
 
     @Autowired

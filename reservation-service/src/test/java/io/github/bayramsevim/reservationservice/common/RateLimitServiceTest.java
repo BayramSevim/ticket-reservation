@@ -1,8 +1,10 @@
 package io.github.bayramsevim.reservationservice.common;
 
+import io.github.bayramsevim.reservationservice.reservation.TestcontainersConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@Import(TestcontainersConfig.class)
 class RateLimitServiceTest {
 
     @Autowired

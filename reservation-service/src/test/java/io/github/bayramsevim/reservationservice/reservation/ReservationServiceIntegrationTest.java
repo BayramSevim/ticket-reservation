@@ -9,6 +9,7 @@ import io.github.bayramsevim.reservationservice.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.math.BigDecimal;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@Import(TestcontainersConfig.class)
 public class ReservationServiceIntegrationTest {
 
     @Autowired private ReservationService reservationService;

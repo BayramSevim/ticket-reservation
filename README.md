@@ -1,8 +1,10 @@
 # Ticket Reservation
 
+[![CI](https://github.com/BayramSevim/ticket-reservation/actions/workflows/ci.yml/badge.svg)](https://github.com/BayramSevim/ticket-reservation/actions/workflows/ci.yml)
+
 A ticket reservation system made of two services. In `reservation-service` users list shows and seats, hold a seat for 10 minutes, then confirm or cancel before the hold expires. `notification-service` listens for reservation events on Kafka and sends the ticket email (simulated with a log line).
 
-**Tech stack:** Java 21, Spring Boot 4.1, Spring Data JPA (Hibernate), PostgreSQL 17, Flyway, Spring Security (JWT), Redis 7, Apache Kafka 4, JUnit 5, Mockito.
+**Tech stack:** Java 21, Spring Boot 4.1, Spring Data JPA (Hibernate), PostgreSQL 17, Flyway, Spring Security (JWT), Redis 7, Apache Kafka 4, JUnit 5, Mockito, Testcontainers, GitHub Actions.
 
 ## Running
 
@@ -12,7 +14,7 @@ docker compose exec postgres psql -U postgres -c "CREATE DATABASE notification;"
 
 cd reservation-service
 ./mvnw spring-boot:run    # API at http://localhost:8080
-./mvnw test               # tests (PostgreSQL, Redis and Kafka must be running)
+./mvnw test               # tests start their own containers (Docker must be running)
 
 cd ../notification-service
 ./mvnw spring-boot:run    # no HTTP port, consumes the "reservation-events" topic
@@ -196,9 +198,18 @@ confirm ──┐  one transaction
 - The relay holds a database transaction while it waits for Kafka, and with more than one instance two relays could send the same row (`FOR UPDATE SKIP LOCKED` would fix this).
 - Published outbox rows and old `processed_events` rows are never cleaned up.
 - Only the confirmed event exists. Cancelled and expired events need a `type` field and dispatch in the consumer.
-- Tests publish to the real Kafka and the real database (Testcontainers is next).
+
+## Testing
+
+```
+reservation-service   33 tests   unit, Mockito, @WebMvcTest, @DataJpaTest, @SpringBootTest
+notification-service   1 test    context starts against PostgreSQL and Kafka
+```
+
+Integration tests use Testcontainers: each run starts PostgreSQL 17, Redis 7 and Kafka in throwaway containers (`TestcontainersConfig`, connected with `@ServiceConnection`), so the tests need only Docker and never touch local data. GitHub Actions runs both services' tests on every push to `main` and on pull requests, one matrix job per service.
 
 ## Roadmap
 
 - Cancelled and expired events, more notification channels
-- Testcontainers, CI
+- Outbox relay safe for multiple instances (`FOR UPDATE SKIP LOCKED`) and cleanup of published rows
+- Tests for the outbox relay and the idempotent consumer
